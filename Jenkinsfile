@@ -28,7 +28,7 @@ pipeline {
             steps {
                 sshagent(['aws_credentials']) {
                     sh """
-                    ssh -o StrictHostKeyChecking=no ec2-user@13.126.166.3 "
+                    ssh -o StrictHostKeyChecking=no ec2-user@13.233.159.187 "
                         docker login -u 22it227 -p SANjai@123 &&
                         docker pull ${DOCKER_IMAGE} &&
                         docker run -d -p 8080:80 ${DOCKER_IMAGE}"

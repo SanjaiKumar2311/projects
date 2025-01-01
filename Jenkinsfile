@@ -1,40 +1,55 @@
 pipeline {
     agent any
+
     environment {
-        DOCKER_IMAGE = "22it227/my-app:v1.0.0" // Replace with your desired name and version
+        // Replace with your Docker Hub username
+        DOCKER_IMAGE = "22it227/ec2:tagname"
+        KUBE_CONFIG = "/path/to/your/kubeconfig" // Path to kubeconfig file for Kubernetes cluster access
     }
+
     stages {
-        stage('Clone Code') {
+        stage('Checkout Code') {
             steps {
-                git 'https://github.com/SanjaiKumar2311/projects.git'
+                // Clone the repository
+                git branch: 'master', url: 'https://github.com/your-repo/quiz-app.git'
             }
         }
+
         stage('Build Docker Image') {
             steps {
-                sh "docker build -t ${DOCKER_IMAGE} ."
+                // Build the Docker image
+                sh 'docker build -t $DOCKER_IMAGE .'
             }
         }
-        stage('Push to Docker Hub') {
+
+        stage('Push Docker Image') {
             steps {
-                withCredentials([usernamePassword(credentialsId: 'dockerhub_credentials', usernameVariable: 'DOCKER_USER', passwordVariable: 'DOCKER_PASS')]) {
-                    sh """
-                    docker login -u $DOCKER_USER -p $DOCKER_PASS
-                    docker push ${DOCKER_IMAGE}
-                    """
+                // Push the Docker image to Docker Hub
+                sh 'docker login -u your-dockerhub-username -p your-dockerhub-password'
+                sh 'docker push $DOCKER_IMAGE'
+            }
+        }
+
+        stage('Deploy to Kubernetes') {
+            steps {
+                // Deploy to Kubernetes cluster
+                withKubeConfig([credentialsId: 'kubeconfig-credentials', serverUrl: 'https://your-kubernetes-cluster-url']) {
+                    sh 'kubectl apply -f kubernetes/deployment.yaml'
+                    sh 'kubectl apply -f kubernetes/service.yaml'
                 }
             }
         }
-        stage('Deploy on EC2') {
-            steps {
-                sshagent(['aws_credentials']) {
-                    sh """
-                    ssh -o StrictHostKeyChecking=no ec2-user@13.233.159.187 "
-                        docker login -u 22it227 -p SANjai@123 &&
-                        docker pull ${DOCKER_IMAGE} &&
-                        docker run -d -p 8080:80 ${DOCKER_IMAGE}"
-                    """
-                }
-            }
+    }
+
+    post {
+        always {
+            echo 'Pipeline execution complete.'
+        }
+        success {
+            echo 'Deployment succeeded!'
+        }
+        failure {
+            echo 'Pipeline failed. Please check logs.'
         }
     }
 }

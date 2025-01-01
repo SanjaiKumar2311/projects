@@ -73,8 +73,8 @@ pipeline {
     agent any
 
     environment {
-        DOCKER_IMAGE = "22it227/ec2:tagname" // Replace with your Docker Hub username and image tag
-        DOCKERHUB_CREDENTIALS = 'dockerhub_credentials' // Replace with your Jenkins credentials ID for Docker Hub
+        DOCKER_IMAGE = "22it227/ec2:tagname"
+        DOCKERHUB_CREDENTIALS = 'dockerhub_credentials'
     }
 
     stages {
@@ -111,7 +111,12 @@ pipeline {
             steps {
                 script {
                     echo "Setting kubectl context to Docker Desktop..."
-                    sh 'export PATH=$PATH:/usr/local/bin && kubectl config use-context docker-desktop'
+
+                    // Check if kubectl is installed
+                    sh 'which kubectl'  // This will output the location or fail if not found
+                    
+                    // Set kubectl context to Docker Desktop
+                    sh 'kubectl config use-context docker-desktop'
 
                     echo "Applying Kubernetes manifests..."
                     sh '''
@@ -136,4 +141,5 @@ pipeline {
         }
     }
 }
+
 
